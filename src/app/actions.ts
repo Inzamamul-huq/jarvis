@@ -9,7 +9,8 @@ export async function transcribeVoiceCommandAction(input: TranscribeVoiceCommand
     return await transcribeFlow(input);
   } catch (error) {
     console.error('Error in transcribeVoiceCommandAction:', error);
-    throw new Error('Failed to transcribe voice command.');
+    const errorMessage = error instanceof Error ? error.message : 'Failed to transcribe voice command.';
+    throw new Error(errorMessage);
   }
 }
 
@@ -18,6 +19,7 @@ export async function analyzeSpeechForActionAction(input: AnalyzeSpeechForAction
     return await analyzeFlow(input);
   } catch (error) {
     console.error('Error in analyzeSpeechForActionAction:', error);
-    throw new Error('Failed to analyze speech for action.');
+    const errorMessage = error instanceof Error ? error.message : 'Failed to analyze speech for action.';
+    throw new Error(errorMessage);
   }
 }
