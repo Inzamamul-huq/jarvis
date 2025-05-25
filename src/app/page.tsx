@@ -6,7 +6,7 @@ import { VoiceCommandButton } from '@/components/voice-command-button';
 import { useMicrophone } from '@/hooks/use-microphone';
 import { transcribeVoiceCommandAction, analyzeSpeechForActionAction } from './actions';
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 type ActionOutput = {
@@ -36,9 +36,25 @@ export default function HomePage() {
       toast({ title: "Transcription Successful", description: "Audio transcribed.",variant: "default" });
 
       const analysisResult = await analyzeSpeechForActionAction({ recognizedSpeech: transcriptionResult.transcription });
-      setActionOutput(analysisResult);
+      
+      let parsedParameters: Record<string, string> = {};
+      if (analysisResult.parameters && analysisResult.parameters.trim() !== "") {
+        try {
+          parsedParameters = JSON.parse(analysisResult.parameters);
+        } catch (e) {
+          console.error("Failed to parse action parameters JSON:", e);
+          toast({
+            title: "Parameter Parsing Error",
+            description: "Could not understand the parameters for the command. Proceeding without parameters.",
+            variant: "destructive",
+          });
+          setCurrentStatus("Error understanding parameters.");
+        }
+      }
+      
+      setActionOutput({ action: analysisResult.action, parameters: parsedParameters });
       setCurrentStatus("Executing action...");
-      executeAction(analysisResult.action, analysisResult.parameters);
+      executeAction(analysisResult.action, parsedParameters);
       
     } catch (error) {
       console.error("Error processing voice command:", error);
@@ -110,7 +126,7 @@ export default function HomePage() {
             const contact = parameters?.contact || parameters?.number;
             if (contact) {
                 // Basic phone number cleanup
-                const phoneNumber = contact.replace(/[^0-9+\s()-]/g, '');
+                const phoneNumber = contact.replace(/[^0-9+\\s()-]/g, '');
                 window.open(`tel:${phoneNumber}`, '_self');
                 executed = true;
                 executionMessage = `Calling ${contact}...`;

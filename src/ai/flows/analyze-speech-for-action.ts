@@ -19,7 +19,7 @@ export type AnalyzeSpeechForActionInput = z.infer<typeof AnalyzeSpeechForActionI
 
 const AnalyzeSpeechForActionOutputSchema = z.object({
   action: z.string().describe('The action to be performed (e.g., open WhatsApp, call John).'),
-  parameters: z.record(z.string()).describe('Parameters for the action as key-value pairs (e.g., {contact: \'John\'})'),
+  parameters: z.string().describe('A JSON string representing parameters for the action as key-value pairs. Example: "{\\"contact\\": \\"Jane Doe\\", \\"message\\": \\"Hi there!\\"}" or an empty JSON object string "{}" if no parameters are found.'),
 });
 export type AnalyzeSpeechForActionOutput = z.infer<typeof AnalyzeSpeechForActionOutputSchema>;
 
@@ -34,10 +34,10 @@ const prompt = ai.definePrompt({
   prompt: `You are a voice assistant that analyzes user speech to determine the desired action and parameters.
 
   Analyze the following speech and extract the action and any parameters required to perform the action.
-  Return the action and parameters in JSON format.
+  Ensure the parameters are returned as a JSON string, conforming to the output schema.
 
   Speech: {{{recognizedSpeech}}}
-  `, /* Remove unnecessary escaping */
+  `,
 });
 
 const analyzeSpeechForActionFlow = ai.defineFlow(
