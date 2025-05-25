@@ -32,6 +32,9 @@ export default function HomePage() {
     try {
       const transcriptionResult = await transcribeVoiceCommandAction({ audioDataUri });
       setTranscribedText(transcriptionResult.transcription);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lastTranscription', transcriptionResult.transcription);
+      }
       setCurrentStatus("Analyzing command...");
       toast({ title: "Transcription Successful", description: "Audio transcribed.",variant: "default" });
 
@@ -52,7 +55,11 @@ export default function HomePage() {
         }
       }
       
-      setActionOutput({ action: analysisResult.action, parameters: parsedParameters });
+      const currentActionOutput = { action: analysisResult.action, parameters: parsedParameters };
+      setActionOutput(currentActionOutput);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lastAction', JSON.stringify(currentActionOutput));
+      }
       setCurrentStatus("Executing action...");
       executeAction(analysisResult.action, parsedParameters);
       
@@ -69,10 +76,12 @@ export default function HomePage() {
       setIsProcessing(false);
       // Reset status after a short delay if no error, or keep error message
       // setTimeout(() => {
-      //   if (!error) setCurrentStatus("Ready to listen");
-      // }, 3000);
+      //   if (!currentStatus.toLowerCase().startsWith("error") && !currentStatus.toLowerCase().startsWith("failed")) {
+      //     setCurrentStatus("Ready to listen");
+      //   }
+      // }, 3000); // Delay kept from original logic, adjust if needed
     }
-  }, [toast]);
+  }, [toast, currentStatus]); // Added currentStatus to dependencies due to its check in finally block logic
 
   const { isRecording, error: micError, startRecording, stopRecording } = useMicrophone({
     onRecordingStop: handleRecordingStop,
